@@ -33,9 +33,5 @@ pose_dataset/*.npy
 pose_dataset/*.npz
 pose_dataset/*.csv
 
-# Keep generated training-results folder structure only
-pose_dataset/training_results/*
-!pose_dataset/training_results/.gitkeep
-
 # Temporary files
 *.log

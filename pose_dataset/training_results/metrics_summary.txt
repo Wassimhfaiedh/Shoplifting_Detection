@@ -1,0 +1,26 @@
+SHOPLIFTING LSTM RESULTS
+============================================================
+
+Accuracy: 0.944785
+Precision: 0.758621
+Recall: 0.916667
+F1-score: 0.830189
+ROC AUC: 0.974520
+Average Precision: 0.915519
+Best Validation Loss: 0.245828
+Best Validation Accuracy: 0.944785
+
+Classification Report
+------------------------------------------------------------
+              precision    recall  f1-score   support
+
+      Normal     0.9851    0.9496    0.9670       139
+ Shoplifting     0.7586    0.9167    0.8302        24
+
+    accuracy                         0.9448       163
+   macro avg     0.8718    0.9332    0.8986       163
+weighted avg     0.9517    0.9448    0.9469       163
+
+Confusion Matrix
+[[132   7]
+ [  2  22]]
