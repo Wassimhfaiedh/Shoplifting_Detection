@@ -9,4 +9,3 @@ Expected generated files include:
 - `shoplifting_lstm.pt` — trained LSTM checkpoint.
 - `training_results/` — plots and metric summaries produced during training.
 
-Large generated files are ignored by Git by default.
