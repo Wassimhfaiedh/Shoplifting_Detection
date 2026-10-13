@@ -1,44 +1,37 @@
 **# Shoplifting Detection with YOLO Pose, ByteTrack and LSTM**
 
-
-
 A computer-vision pipeline for **person tracking and temporal shoplifting-behavior classification** from retail video.
-
-
 
 The project combines **YOLO11 Pose** for human pose estimation, **ByteTrack** for persistent person IDs, and an **LSTM classifier** that learns motion patterns across short pose sequences.
 
-
-
 **---**
 
-
-
-**## Demo
+## Demo
 
 Three GIF demos are shown below. Each demo can include both **Normal** and **Shoplifting** behavior so the difference between the two classes is easy to see.
 
 | Demo 1 | Demo 2 | Demo 3 |
+
 |---|---|---|
-| <img src="assets/gifs/demo_1.gif" width="300"> | <img src="assets/gifs/demo_2.gif" width="300"> | <img src="assets/gifs/demo_3.gif" width="300"> |
+
+| \<img src="assets/gifs/demo_1.gif" width="300"> | \<img src="assets/gifs/demo_2.gif" width="300"> | \<img src="assets/gifs/demo_3.gif" width="300"> |
 
 Replace the three placeholder GIFs in `assets/gifs/` while keeping the same filenames:
 
 ```text
+
 demo_1.gif
+
 demo_2.gif
+
 demo_3.gif
+
 ```
 
 ---
 
-## Project overview**
-
-
-
+## Project overview
 The system is designed as a temporal pose-classification pipeline rather than a single-frame image classifier.
-
-
 
 \`\`\`text
 
@@ -106,31 +99,17 @@ Normal / Shoplifting
 
 \`\`\`
 
-
-
 **### Why pose + LSTM?**
-
-
 
 A single frame does not describe a behavior well. Shoplifting is a temporal action, so the system tracks body motion over a sequence of observations. The LSTM receives normalized body-joint coordinates and learns the difference between normal customer movement and labeled shoplifting behavior.
 
-
-
 **---**
-
-
 
 **## Dataset**
 
-
-
 The current dataset was created from **9 source videos**.
 
-
-
 The workflow is:
-
-
 
 1\. Open a source video in the labeling application.
 
@@ -146,11 +125,7 @@ The workflow is:
 
 7\. Train the LSTM on the resulting \`X.npy\` and \`y.npy\`.
 
-
-
 **### Classes**
-
-
 
 | Class ID | Class |
 
@@ -160,11 +135,7 @@ The workflow is:
 
 | 1 | Shoplifting |
 
-
-
 The pose representation uses the **17 COCO body keypoints**, with normalized \`(x, y)\` coordinates for each point:
-
-
 
 \`\`\`text
 
@@ -172,111 +143,55 @@ The pose representation uses the **17 COCO body keypoints**, with normalized \`(
 
 \`\`\`
 
-
-
 Low-confidence or missing keypoints are represented by zeros.
-
-
 
 \> The repository structure is prepared for the dataset, but source videos and generated clips are excluded by \`.gitignore\` to keep the GitHub repository lightweight.
 
-
-
 **---**
 
+**## Repository structure
 
-
-**## Repository structure**
-
-
-
-\`\`\`text
-
+```text
 shoplifting_detection_yolo_pose_lstm/
-
 │
-
 ├── README.md
-
 ├── requirements.txt
-
 ├── .gitignore
-
 │
-
 ├── src/
-
-│   ├── 01_dataset_labeling_gui.py
-
-│   ├── 02_extract_pose_sequences.py
-
-│   ├── 03_train_lstm.py
-
-│   └── 04_inference_lstm.py
-
+│   ├── 01_dataset_labeling_gui.py
+│   ├── 02_extract_pose_sequences.py
+│   ├── 03_train_lstm.py
+│   └── 04_inference_lstm.py
 │
-
 ├── dataset/
-
-│   ├── Normal/
-
-│   └── Shoplifting/
-
-│  &#x20;
-
-│  &#x20;
-
-│      &#x20;
-
+│   ├── Normal/
+│   └── Shoplifting/
 │
-
 ├── pose_dataset/
-
-│   └── training_results/
-
-│  &#x20;
-
-│      &#x20;
-
+│   └── training_results/
+│       ├── loss_curve.png
+│       ├── accuracy_curve.png
+│       ├── confusion_matrix.png
+│       └── metrics_summary.txt
 │
-
 ├── assets/
-
-│   └── gifs/
-
-│       ├── normal_1.gif
-
-│       ├── normal_2.gif
-
-│       ├── shoplifting_1.gif
-
-│       └── shoplifting_2.gif
-
+│   └── gifs/
+│       ├── demo_1.gif
+│       ├── demo_2.gif
+│       └── demo_3.gif
 │
-
 └── docs/
+    └── RESULTS.md
+```
 
-    └── RESULTS.md
+---
 
-\`\`\`
-
-
-
-**---**
-
-
-
-**## Pipeline details**
-
-
+## Pipeline details**
 
 **### 1. Dataset labeling GUI**
 
-
-
 Run:
-
-
 
 \`\`\`bash
 
@@ -284,15 +199,9 @@ python src/01_dataset_labeling_gui.py
 
 \`\`\`
 
-
-
 The GUI uses YOLO11 Pose and ByteTrack to track people in the selected video. Detected people are Normal by default, and selected track IDs can be marked as Shoplifting.
 
-
-
 Generated data is organized under:
-
-
 
 \`\`\`text
 
@@ -304,19 +213,11 @@ dataset/
 
 \`\`\`
 
-
-
 **---**
-
-
 
 **### 2. Pose-sequence extraction**
 
-
-
 Run:
-
-
 
 \`\`\`bash
 
@@ -324,11 +225,7 @@ python src/02_extract_pose_sequences.py
 
 \`\`\`
 
-
-
 For each tracked person:
-
-
 
 \- the bounding box is clipped to the source frame,
 
@@ -342,11 +239,7 @@ For each tracked person:
 
 \- temporal windows are generated for LSTM training.
 
-
-
 The current extraction script contains configurable temporal settings near the top of the file. In the supplied version, these are:
-
-
 
 \`\`\`python
 
@@ -356,11 +249,7 @@ SEQUENCE_STRIDE = 5
 
 \`\`\`
 
-
-
 The generated training arrays are stored in:
-
-
 
 \`\`\`text
 
@@ -372,19 +261,11 @@ pose_dataset/
 
 \`\`\`
 
-
-
 **---**
-
-
 
 **### 3. LSTM training**
 
-
-
 Run:
-
-
 
 \`\`\`bash
 
@@ -392,11 +273,7 @@ python src/03_train_lstm.py
 
 \`\`\`
 
-
-
 The supplied model uses:
-
-
 
 \`\`\`text
 
@@ -454,11 +331,7 @@ Normal / Shoplifting
 
 \`\`\`
 
-
-
 Training configuration:
-
-
 
 | Parameter | Value |
 
@@ -480,32 +353,19 @@ Training configuration:
 
 | Early-stopping patience | 15 |
 
-
-
 Class-weighted cross-entropy is used to reduce the effect of class imbalance.
-
-
 
 **---**
 
+## Results and evaluation
 
-
-**## Results and evaluation
-
-The training script saves the main evaluation artifacts under:
+The training script saves the main evaluation outputs under:
 
 ```text
 pose_dataset/training_results/
 ```
 
 ### Training curves
-
-Only the two main training curves are displayed in this project:
-
-| Artifact | Description |
-|---|---|
-| `loss_curve.png` | Training and validation loss across epochs |
-| `accuracy_curve.png` | Training and validation accuracy across epochs |
 
 #### Loss curve
 
@@ -517,20 +377,18 @@ Only the two main training curves are displayed in this project:
 
 ### Confusion matrix
 
-The confusion matrix shows how many Normal and Shoplifting samples are classified correctly or incorrectly.
-
 <img src="pose_dataset/training_results/confusion_matrix.png" width="620">
 
 ### Classification report
 
-The final classification report contains the main class-level evaluation metrics:
+The classification report contains:
 
 - Precision
 - Recall
 - F1-score
 - Support
 
-for both:
+for both classes:
 
 - Normal
 - Shoplifting
@@ -541,37 +399,10 @@ The report is saved in:
 pose_dataset/training_results/metrics_summary.txt
 ```
 
-Example structure:
-
-```text
-              precision    recall  f1-score   support
-
-Normal
-Shoplifting
-
-accuracy
-macro avg
-weighted avg
-```
-
-Only these evaluation outputs are highlighted in the repository:
-
-```text
-loss_curve.png
-accuracy_curve.png
-confusion_matrix.png
-metrics_summary.txt
-```
-
 ---
 
-## Inference**
-
-
-
+## Inference
 Run:
-
-
 
 \`\`\`bash
 
@@ -579,11 +410,7 @@ python src/04_inference_lstm.py
 
 \`\`\`
 
-
-
 The inference stage performs:
-
-
 
 \`\`\`text
 
@@ -607,11 +434,7 @@ video frame
 
 \`\`\`
 
-
-
 The current inference script loads:
-
-
 
 \`\`\`text
 
@@ -619,45 +442,27 @@ pose_dataset/shoplifting_lstm.pt
 
 \`\`\`
 
-
-
 and produces an annotated output video.
-
-
 
 The decision threshold and temporal smoothing are configurable at the top of \`src/04_inference_lstm.py\`.
 
-
-
 **---**
-
-
 
 **## Installation**
 
-
-
 **### 1. Clone the repository**
-
-
 
 \`\`\`bash
 
 git clone https\://github.com/Wassimhfaiedh/Shoplifting_Detection.git
 
-
 cd Shoplifting_Detection
 
 \`\`\`
 
-
 **### 2. Create a virtual environment**
 
-
-
 Windows:
-
-
 
 \`\`\`bash
 
@@ -667,11 +472,7 @@ python -m venv .venv
 
 \`\`\`
 
-
-
 Linux/macOS:
-
-
 
 \`\`\`bash
 
@@ -681,11 +482,7 @@ source .venv/bin/activate
 
 \`\`\`
 
-
-
 **### 3. Install dependencies**
-
-
 
 \`\`\`bash
 
@@ -693,75 +490,41 @@ pip install -r requirements.txt
 
 \`\`\`
 
-
-
 YOLO weights such as \`yolo11s-pose.pt\` can be placed in the project root or resolved by Ultralytics when supported by the installed package.
-
-
 
 **---**
 
-
-
 **## Typical workflow**
-
-
 
 \`\`\`bash
 
 # 1. Label the source videos
-
 python src/01_dataset_labeling_gui.py
 
-
-
 # 2. Build pose sequences
-
 python src/02_extract_pose_sequences.py
 
-
-
 # 3. Train and save metrics
-
 python src/03_train_lstm.py
 
-
-
 # 4. Run inference
-
 python src/04_inference_lstm.py
 
 \`\`\`
 
-
-
 **---**
-
-
 
 **## Notes on validation**
 
-
-
 The current training script uses a stratified random train/validation split of the generated pose sequences.
-
-
 
 For a stronger final benchmark, especially when neighboring temporal windows come from the same source footage, use a **video-level or segment-level grouped split** so sequences from the same source do not appear in both training and validation.
 
-
-
 This is especially important when reporting final GitHub metrics.
-
-
 
 **---**
 
-
-
 **## Limitations**
-
-
 
 \- The system learns behavior from body pose, so visually similar hand/body movements can produce false positives.
 
@@ -773,19 +536,11 @@ This is especially important when reporting final GitHub metrics.
 
 \- The current dataset contains 9 source videos, so additional independent scenes are recommended before treating the model as production-ready.
 
-
-
 **---**
-
-
 
 **## Future improvements**
 
-
-
 Possible next steps include:
-
-
 
 \- more independent training videos,
 
@@ -803,15 +558,9 @@ Possible next steps include:
 
 \- threshold tuning based on the precision-recall curve.
 
-
-
 **---**
 
-
-
 **## Technologies**
-
-
 
 \- Python
 
@@ -833,8 +582,4 @@ Possible next steps include:
 
 \- Pillow
 
-
-
 **---**
-
-
