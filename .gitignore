@@ -1,0 +1,41 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Large datasets and generated videos
+dataset/Normal/*
+dataset/Shoplifting/*
+!dataset/Normal/.gitkeep
+!dataset/Shoplifting/.gitkeep
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.m4v
+
+# Model files
+*.pt
+*.pth
+*.onnx
+
+# Generated pose arrays
+pose_dataset/*.npy
+pose_dataset/*.npz
+pose_dataset/*.csv
+
+# Keep generated training-results folder structure only
+pose_dataset/training_results/*
+!pose_dataset/training_results/.gitkeep
+
+# Temporary files
+*.log
