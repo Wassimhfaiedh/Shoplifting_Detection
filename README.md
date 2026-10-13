@@ -63,24 +63,25 @@ pose_dataset/training_results/
 
 **Classification Report**
 
-The final classification report contains:
+### Final Metrics
 
-```text
-              precision    recall  f1-score   support
+| Metric | Value |
+|---|---:|
+| Accuracy | **0.9448** |
+| Precision — Shoplifting | **0.7586** |
+| Recall — Shoplifting | **0.9167** |
+| F1-score — Shoplifting | **0.8302** |
 
-Normal
-Shoplifting
+### Detailed Classification Report
 
-accuracy
-macro avg
-weighted avg
-```
+| Class | Precision | Recall | F1-score | Support |
+|---|---:|---:|---:|---:|
+| Normal | 0.9851 | 0.9496 | 0.9670 | 139 |
+| Shoplifting | 0.7586 | 0.9167 | 0.8302 | 24 |
+| **Accuracy** |  |  | **0.9448** | **163** |
+| Macro avg | 0.8718 | 0.9332 | 0.8986 | 163 |
+| Weighted avg | 0.9517 | 0.9448 | 0.9469 | 163 |
 
-The complete report is saved in:
-
-```text
-pose_dataset/training_results/metrics_summary.txt
-```
 
 ---
 
