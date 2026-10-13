@@ -1,159 +1,172 @@
-**# Shoplifting Detection with YOLO Pose, ByteTrack and LSTM**
+# Shoplifting Detection
 
-A computer-vision pipeline for **person tracking and temporal shoplifting-behavior classification** from retail video.
+> **YOLO Pose + ByteTrack + LSTM Behavior Recognition** — Track people in retail video and classify temporal behavior as Normal or Shoplifting.
 
-The project combines **YOLO11 Pose** for human pose estimation, **ByteTrack** for persistent person IDs, and an **LSTM classifier** that learns motion patterns across short pose sequences.
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python) ![PyTorch](https://img.shields.io/badge/PyTorch-LSTM-red?logo=pytorch) ![YOLO](https://img.shields.io/badge/YOLO11-Pose-purple) ![ByteTrack](https://img.shields.io/badge/ByteTrack-Tracking-orange) ![OpenCV](https://img.shields.io/badge/OpenCV-Video-green?logo=opencv) ![License](https://img.shields.io/badge/License-MIT-green)
 
-**---**
+This project uses **YOLO11 Pose** for human pose estimation, **ByteTrack** for stable person IDs, and a temporal **LSTM classifier** to distinguish between Normal and Shoplifting behavior from retail surveillance video.
 
-## Demo
+Instead of classifying a single frame, the system follows each detected person over time, extracts body keypoints, builds pose sequences, and classifies the temporal movement pattern.
 
-Three GIF demos are shown below. Each demo can include both **Normal** and **Shoplifting** behavior so the difference between the two classes is easy to see.
+---
 
-| Demo 1 | Demo 2 | Demo 3 |
+## 🎬 Demo
 
-|---|---|---|
+**Demo 1**
 
-| \<img src="assets/gifs/demo_1.gif" width="300"> | \<img src="assets/gifs/demo_2.gif" width="300"> | \<img src="assets/gifs/demo_3.gif" width="300"> |
+<img src="assets/gifs/demo_1.gif" width="900"/>
 
-Replace the three placeholder GIFs in `assets/gifs/` while keeping the same filenames:
+**Demo 2**
+
+<img src="assets/gifs/demo_2.gif" width="900"/>
+
+**Demo 3**
+
+<img src="assets/gifs/demo_3.gif" width="900"/>
+
+---
+
+## ✨ Features
+
+| Feature | Description |
+|---|---|
+| **Person Detection** | YOLO11 Pose detects people and estimates 17 COCO body keypoints |
+| **Multi-Person Tracking** | ByteTrack keeps a stable ID for each person across video frames |
+| **Pose Extraction** | Each tracked person is cropped and processed again with YOLO Pose |
+| **Normalized Keypoints** | 17 body keypoints are converted to 34 normalized `(x, y)` features |
+| **Temporal Classification** | An LSTM analyzes pose sequences instead of isolated frames |
+| **Normal / Shoplifting Classification** | Each tracked person is classified into one of the two behavior classes |
+| **Dataset Labeling Tool** | A Tkinter interface is used to create and label Normal and Shoplifting video segments |
+| **Evaluation Metrics** | Training generates accuracy/loss curves, confusion matrix, and classification report |
+
+---
+
+## 📊 Results
+
+The training script saves the main evaluation outputs inside:
 
 ```text
+pose_dataset/training_results/
+```
 
-demo_1.gif
+**Training and Validation Accuracy**
 
-demo_2.gif
+<img src="pose_dataset/training_results/accuracy_curve.png" width="800"/>
 
-demo_3.gif
+**Training and Validation Loss**
 
+<img src="pose_dataset/training_results/loss_curve.png" width="800"/>
+
+**Confusion Matrix**
+
+<img src="pose_dataset/training_results/confusion_matrix.png" width="650"/>
+
+**Classification Report**
+
+The final classification report contains:
+
+```text
+              precision    recall  f1-score   support
+
+Normal
+Shoplifting
+
+accuracy
+macro avg
+weighted avg
+```
+
+The complete report is saved in:
+
+```text
+pose_dataset/training_results/metrics_summary.txt
 ```
 
 ---
 
-## Project overview
-The system is designed as a temporal pose-classification pipeline rather than a single-frame image classifier.
+## 🗂️ Dataset
 
-\`\`\`text
+The current experimental dataset was created from **9 source videos** containing Normal and Shoplifting scenarios.
 
-Retail video
+The dataset creation workflow is:
 
-    │
+1. Open a source video in the labeling application
+2. Detect and track people with YOLO11 Pose + ByteTrack
+3. Treat detected people as **Normal by default**
+4. Manually mark the target tracked person as **Shoplifting** when required
+5. Save labeled video segments and tracking annotations
+6. Extract pose features from each tracked person
+7. Build temporal sequences for LSTM training
 
-    ▼
-
-YOLO11 Pose
-
-    │
-
-    ▼
-
-ByteTrack person tracking
-
-    │
-
-    ▼
-
-Tracked person bounding box
-
-    │
-
-    ├── 8% padded person crop
-
-    │
-
-    ▼
-
-YOLO11 Pose on person crop
-
-    │
-
-    ▼
-
-17 COCO keypoints
-
-    │
-
-    ▼
-
-34 normalized pose features
-
-(x1, y1, ... x17, y17)
-
-    │
-
-    ▼
-
-Temporal pose sequence
-
-    │
-
-    ▼
-
-2-layer LSTM
-
-    │
-
-    ▼
-
-Normal / Shoplifting
-
-\`\`\`
-
-**### Why pose + LSTM?**
-
-A single frame does not describe a behavior well. Shoplifting is a temporal action, so the system tracks body motion over a sequence of observations. The LSTM receives normalized body-joint coordinates and learns the difference between normal customer movement and labeled shoplifting behavior.
-
-**---**
-
-**## Dataset**
-
-The current dataset was created from **9 source videos**.
-
-The workflow is:
-
-1\. Open a source video in the labeling application.
-
-2\. Detect and track people with YOLO Pose + ByteTrack.
-
-3\. Treat every detected person as **Normal by default**.
-
-4\. Manually mark the relevant tracked ID as **Shoplifting** when required.
-
-5\. Save labeled video segments and tracking annotations.
-
-6\. Convert the labeled tracks into pose sequences.
-
-7\. Train the LSTM on the resulting \`X.npy\` and \`y.npy\`.
-
-**### Classes**
+The two classes are:
 
 | Class ID | Class |
-
 |---:|---|
-
 | 0 | Normal |
-
 | 1 | Shoplifting |
 
-The pose representation uses the **17 COCO body keypoints**, with normalized \`(x, y)\` coordinates for each point:
+The pose representation uses the **17 COCO body keypoints**:
 
-\`\`\`text
-
-17 keypoints × 2 coordinates = 34 features per pose observation
-
-\`\`\`
+```text
+17 keypoints × 2 coordinates = 34 pose features
+```
 
 Low-confidence or missing keypoints are represented by zeros.
 
-\> The repository structure is prepared for the dataset, but source videos and generated clips are excluded by \`.gitignore\` to keep the GitHub repository lightweight.
+---
 
-**---**
-
-**## Repository structure
+## 🏗️ Architecture
 
 ```text
-shoplifting_detection_yolo_pose_lstm/
-│
+Retail Video
+    │
+    ▼
+YOLO11 Pose
+    │
+    ▼
+ByteTrack
+    │
+    ▼
+Tracked Person Bounding Box
+    │
+    ▼
+8% Padded Person Crop
+    │
+    ▼
+YOLO11 Pose on Person Crop
+    │
+    ▼
+17 COCO Keypoints
+    │
+    ▼
+34 Normalized Pose Features
+    │
+    ▼
+Temporal Pose Sequence
+    │
+    ▼
+2-Layer LSTM
+Hidden Size: 128
+    │
+    ▼
+Linear 128 → 64
+    │
+    ▼
+ReLU + Dropout
+    │
+    ▼
+Linear 64 → 2
+    │
+    ▼
+Normal / Shoplifting
+```
+
+---
+
+## 📁 Project Structure
+
+```text
+Shoplifting_Detection/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
@@ -169,9 +182,12 @@ shoplifting_detection_yolo_pose_lstm/
 │   └── Shoplifting/
 │
 ├── pose_dataset/
+│   ├── X.npy
+│   ├── y.npy
+│   ├── shoplifting_lstm.pt
 │   └── training_results/
-│       ├── loss_curve.png
 │       ├── accuracy_curve.png
+│       ├── loss_curve.png
 │       ├── confusion_matrix.png
 │       └── metrics_summary.txt
 │
@@ -187,399 +203,218 @@ shoplifting_detection_yolo_pose_lstm/
 
 ---
 
-## Pipeline details**
+## 🚀 Getting Started
 
-**### 1. Dataset labeling GUI**
+### Prerequisites
 
-Run:
+- Python 3.10+
+- PyTorch
+- OpenCV
+- Ultralytics
+- YOLO11 Pose weights: `yolo11s-pose.pt`
 
-\`\`\`bash
+### Installation
 
+```bash
+# 1. Clone the repository
+git clone https://github.com/Wassimhfaiedh/Shoplifting_Detection.git
+cd Shoplifting_Detection
+
+# 2. Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate        # Linux/macOS
+.venv\Scripts\activate           # Windows
+
+# 3. Install dependencies
+pip install -r requirements.txt
+```
+
+---
+
+## 📋 Requirements
+
+```text
+ultralytics
+opencv-python
+numpy
+torch
+torchvision
+scikit-learn
+matplotlib
+Pillow
+```
+
+---
+
+## 🖥️ Usage
+
+### 1. Create and label the dataset
+
+```bash
 python src/01_dataset_labeling_gui.py
+```
 
-\`\`\`
+The labeling interface uses YOLO11 Pose + ByteTrack to track people in each source video.
 
-The GUI uses YOLO11 Pose and ByteTrack to track people in the selected video. Detected people are Normal by default, and selected track IDs can be marked as Shoplifting.
+Detected persons are Normal by default, and the relevant tracked person can be manually marked as Shoplifting.
 
-Generated data is organized under:
+---
 
-\`\`\`text
+### 2. Extract pose sequences
 
-dataset/
-
-├── Normal/
-
-└── Shoplifting/
-
-\`\`\`
-
-**---**
-
-**### 2. Pose-sequence extraction**
-
-Run:
-
-\`\`\`bash
-
+```bash
 python src/02_extract_pose_sequences.py
+```
 
-\`\`\`
+The script:
 
-For each tracked person:
+- reads the labeled video segments,
+- retrieves each tracked person bounding box,
+- applies an 8% padding around the person,
+- runs YOLO Pose on the person crop,
+- extracts 17 body keypoints,
+- normalizes `(x, y)` coordinates,
+- generates temporal pose sequences,
+- saves the final arrays as `X.npy` and `y.npy`.
 
-\- the bounding box is clipped to the source frame,
+---
 
-\- an **8% padding** is applied,
+### 3. Train the LSTM
 
-\- YOLO Pose is run on the person crop,
-
-\- the highest-confidence person pose is selected,
-
-\- 17 keypoints are converted to 34 normalized \`(x, y)\` features,
-
-\- temporal windows are generated for LSTM training.
-
-The current extraction script contains configurable temporal settings near the top of the file. In the supplied version, these are:
-
-\`\`\`python
-
-SEQUENCE_LENGTH = 10
-
-SEQUENCE_STRIDE = 5
-
-\`\`\`
-
-The generated training arrays are stored in:
-
-\`\`\`text
-
-pose_dataset/
-
-├── X.npy
-
-└── y.npy
-
-\`\`\`
-
-**---**
-
-**### 3. LSTM training**
-
-Run:
-
-\`\`\`bash
-
+```bash
 python src/03_train_lstm.py
-
-\`\`\`
-
-The supplied model uses:
-
-\`\`\`text
-
-Input pose sequence
-
-      │
-
-      ▼
-
-2-layer LSTM
-
-Hidden size: 128
-
-      │
-
-      ▼
-
-Last temporal representation
-
-      │
-
-      ▼
-
-Dropout
-
-      │
-
-      ▼
-
-Linear 128 → 64
-
-      │
-
-      ▼
-
-ReLU
-
-      │
-
-      ▼
-
-Dropout
-
-      │
-
-      ▼
-
-Linear 64 → 2
-
-      │
-
-      ▼
-
-Normal / Shoplifting
-
-\`\`\`
+```
 
 Training configuration:
 
 | Parameter | Value |
-
 |---|---:|
-
 | Batch size | 16 |
-
 | Maximum epochs | 150 |
-
 | Learning rate | 0.001 |
-
 | Hidden size | 128 |
-
 | LSTM layers | 2 |
-
 | Dropout | 0.40 |
-
 | Validation split | 20% |
+| Early stopping patience | 15 |
 
-| Early-stopping patience | 15 |
+The training script automatically saves:
 
-Class-weighted cross-entropy is used to reduce the effect of class imbalance.
+```text
+accuracy_curve.png
+loss_curve.png
+confusion_matrix.png
+metrics_summary.txt
+```
 
-**---**
+---
 
-## Results and evaluation
+### 4. Run inference
 
-The training script saves the main evaluation outputs under:
+```bash
+python src/04_inference_lstm.py
+```
+
+The inference pipeline is:
+
+```text
+Video Frame
+→ YOLO11 Pose + ByteTrack
+→ Person ID
+→ Person Crop
+→ Pose Extraction
+→ Pose History
+→ LSTM
+→ Temporal Smoothing
+→ Normal / Shoplifting
+```
+
+The output video displays each tracked person with:
+
+```text
+ID X | Normal
+```
+
+or:
+
+```text
+ID X | Shoplifting
+```
+
+---
+
+## ⚙️ Main Configuration
+
+Important parameters can be adjusted directly in the scripts:
+
+```python
+POSE_MODEL_PATH = "yolo11s-pose.pt"
+
+TRACKER = "bytetrack.yaml"
+
+POSE_CONF_THRESHOLD = 0.50
+KEYPOINT_CONF_THRESHOLD = 0.50
+
+HIDDEN_SIZE = 128
+NUM_LAYERS = 2
+DROPOUT = 0.40
+```
+
+---
+
+## 📈 Evaluation
+
+The project focuses on the following evaluation outputs:
+
+- **Training / Validation Accuracy**
+- **Training / Validation Loss**
+- **Confusion Matrix**
+- **Classification Report**
+  - Precision
+  - Recall
+  - F1-score
+  - Support
+
+These results are generated automatically during training and stored under:
 
 ```text
 pose_dataset/training_results/
 ```
 
-### Training curves
+---
 
-#### Loss curve
+## ⚠️ Limitations
 
-<img src="pose_dataset/training_results/loss_curve.png" width="720">
-
-#### Accuracy curve
-
-<img src="pose_dataset/training_results/accuracy_curve.png" width="720">
-
-### Confusion matrix
-
-<img src="pose_dataset/training_results/confusion_matrix.png" width="620">
-
-### Classification report
-
-The classification report contains:
-
-- Precision
-- Recall
-- F1-score
-- Support
-
-for both classes:
-
-- Normal
-- Shoplifting
-
-The report is saved in:
-
-```text
-pose_dataset/training_results/metrics_summary.txt
-```
+- Similar hand/body movements can sometimes produce false positives
+- Weak or occluded pose keypoints can affect temporal classification
+- Performance depends strongly on camera angle and dataset diversity
+- The current dataset contains only 9 source videos
+- Pose-only classification does not explicitly model interaction with products
 
 ---
 
-## Inference
-Run:
+## 🔭 Future Improvements
 
-\`\`\`bash
+- Add more independent Normal and Shoplifting videos
+- Add more hard-negative Normal examples
+- Improve pose robustness under occlusion
+- Add hand-to-object interaction features
+- Add pose velocity features
+- Experiment with temporal attention
+- Use grouped train/validation splitting by source video
+- Optimize the decision threshold for precision/recall balance
 
-python src/04_inference_lstm.py
+---
 
-\`\`\`
+## 🙏 Acknowledgements
 
-The inference stage performs:
+- [Ultralytics](https://github.com/ultralytics/ultralytics) — YOLO11 Pose
+- [ByteTrack](https://github.com/ifzhang/ByteTrack) — multi-object tracking
+- [PyTorch](https://pytorch.org/) — LSTM training and inference
+- [OpenCV](https://opencv.org/) — video processing
 
-\`\`\`text
+---
 
-video frame
+## 📝 License
 
-→ YOLO Pose + ByteTrack
-
-→ person ID
-
-→ padded person crop
-
-→ normalized pose
-
-→ pose history
-
-→ LSTM
-
-→ probability smoothing
-
-→ Normal / Shoplifting
-
-\`\`\`
-
-The current inference script loads:
-
-\`\`\`text
-
-pose_dataset/shoplifting_lstm.pt
-
-\`\`\`
-
-and produces an annotated output video.
-
-The decision threshold and temporal smoothing are configurable at the top of \`src/04_inference_lstm.py\`.
-
-**---**
-
-**## Installation**
-
-**### 1. Clone the repository**
-
-\`\`\`bash
-
-git clone https\://github.com/Wassimhfaiedh/Shoplifting_Detection.git
-
-cd Shoplifting_Detection
-
-\`\`\`
-
-**### 2. Create a virtual environment**
-
-Windows:
-
-\`\`\`bash
-
-python -m venv .venv
-
-.venv\Scripts\activate
-
-\`\`\`
-
-Linux/macOS:
-
-\`\`\`bash
-
-python3 -m venv .venv
-
-source .venv/bin/activate
-
-\`\`\`
-
-**### 3. Install dependencies**
-
-\`\`\`bash
-
-pip install -r requirements.txt
-
-\`\`\`
-
-YOLO weights such as \`yolo11s-pose.pt\` can be placed in the project root or resolved by Ultralytics when supported by the installed package.
-
-**---**
-
-**## Typical workflow**
-
-\`\`\`bash
-
-# 1. Label the source videos
-python src/01_dataset_labeling_gui.py
-
-# 2. Build pose sequences
-python src/02_extract_pose_sequences.py
-
-# 3. Train and save metrics
-python src/03_train_lstm.py
-
-# 4. Run inference
-python src/04_inference_lstm.py
-
-\`\`\`
-
-**---**
-
-**## Notes on validation**
-
-The current training script uses a stratified random train/validation split of the generated pose sequences.
-
-For a stronger final benchmark, especially when neighboring temporal windows come from the same source footage, use a **video-level or segment-level grouped split** so sequences from the same source do not appear in both training and validation.
-
-This is especially important when reporting final GitHub metrics.
-
-**---**
-
-**## Limitations**
-
-\- The system learns behavior from body pose, so visually similar hand/body movements can produce false positives.
-
-\- Occlusion or weak keypoint estimates can reduce classification quality.
-
-\- Dataset diversity strongly affects generalization to new stores, cameras and viewpoints.
-
-\- Pose-only behavior classification does not explicitly model product-object interaction.
-
-\- The current dataset contains 9 source videos, so additional independent scenes are recommended before treating the model as production-ready.
-
-**---**
-
-**## Future improvements**
-
-Possible next steps include:
-
-\- more independent training videos,
-
-\- hard-negative examples,
-
-\- hand-to-object interaction features,
-
-\- temporal attention,
-
-\- pose velocity features,
-
-\- grouped train/validation splits,
-
-\- per-camera calibration,
-
-\- threshold tuning based on the precision-recall curve.
-
-**---**
-
-**## Technologies**
-
-\- Python
-
-\- PyTorch
-
-\- Ultralytics YOLO11 Pose
-
-\- ByteTrack
-
-\- OpenCV
-
-\- NumPy
-
-\- scikit-learn
-
-\- Matplotlib
-
-\- Tkinter
-
-\- Pillow
-
-**---**
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
